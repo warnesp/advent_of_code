@@ -1,0 +1,101 @@
+;; advent of code day 9 rope bridge
+
+(defparameter *head-pos* '(0 0))
+(defparameter *tail-pos* '(0 0))
+(defparameter *tails-pos* nil)
+
+(defparameter *tail-history* '((0 0)))
+(defparameter *tails-history* '((0 0)))
+
+(defun reset-rope ()
+  (setf *head-pos* (copy-list '(0 0)))
+  (setf *tail-pos* (copy-list '(0 0)))
+  (setf *tail-history* (copy-list '((0 0))))
+  (setf *tails-history* (copy-list '((0 0))))
+  (setf *tails-pos* (list
+                      (copy-list '(0 0))
+                      (copy-list '(0 0))
+                      (copy-list '(0 0))
+                      (copy-list '(0 0))
+                      (copy-list '(0 0))
+                      (copy-list '(0 0))
+                      (copy-list '(0 0))
+                      (copy-list '(0 0))
+                      (copy-list '(0 0))
+                      )))
+
+(defun move-left (p)
+  (decf (car p)))
+(defun move-right (p)
+  (incf (car p)))
+(defun move-up (p)
+  (incf (cadr p)))
+(defun move-down (p)
+  (decf (cadr p)))
+
+(defun delta-mag (kn1 kn2)
+  (max (abs (- (car kn1) (car kn2)))
+       (abs (- (cadr kn1) (cadr kn2))))
+  )
+
+(defun move-tail (kn1 kn2)
+  (when (> (delta-mag kn1 kn2) 1) 
+    (let ((hx (car kn1))
+          (hy (cadr kn1))
+          (tx (car kn2))
+          (ty (cadr kn2)))
+      (when (> hx tx) (move-right kn2))
+      (when (< hx tx) (move-left kn2))
+      (when (> hy ty) (move-up kn2))
+      (when (< hy ty) (move-down kn2))
+      (push (copy-list kn2) *tail-history*)
+      )))
+
+(defun move-tails (kn1 tails)
+  (when (> (delta-mag kn1 (car tails)) 1) 
+    (let ((hx (car kn1))
+          (hy (cadr kn1))
+          (tx (car (car tails)))
+          (ty (cadr (car tails))))
+      (when (> hx tx) (move-right (car tails)))
+      (when (< hx tx) (move-left (car tails)))
+      (when (> hy ty) (move-up (car tails)))
+      (when (< hy ty) (move-down (car tails)))
+      (if (cdr tails)
+          (move-tails (car tails) (cdr tails))
+          (push (copy-list (car tails)) *tails-history*)
+          )
+      )))
+
+(defun move (direction)
+  (case direction
+    ((#\U) (move-up *head-pos*))
+    ((#\D) (move-down *head-pos*))
+    ((#\L) (move-left *head-pos*))
+    ((#\R) (move-right *head-pos*))
+    )
+  (move-tail *head-pos* *tail-pos*)
+  (move-tails *head-pos* *tails-pos*)
+  )
+
+(defun multi-move (direction amnt)
+  (dotimes (n amnt) (move direction))
+  )
+
+(defun count-unique-tail (history)
+  (length (remove-duplicates history :test #'equal)))
+
+(defun read-rope-file ()
+  (reset-rope)
+    (with-open-file (in "input-day09" :if-does-not-exist nil) 
+      (when in
+        (loop for line = (read-line in nil)
+              while line do
+                (multi-move (char line 0) (parse-integer (subseq line 2)))
+              )))
+
+  (list 
+  (count-unique-tail *tail-history*)  
+  (count-unique-tail *tails-history*))  
+
+)
