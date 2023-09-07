@@ -26,7 +26,7 @@
     ))
 
 (defun read-pv-file ()
-  (with-open-file (in "input-day16" :if-does-not-exist nil) 
+  (with-open-file (in "inputs/input-day16" :if-does-not-exist nil) 
     (when in
       (loop for line = (read-line in nil)
             while line
@@ -79,25 +79,50 @@
     (t (princ "fall through") nil)
     ))
 
-(defun find-empty-pair-rec (nodes to-search)
-  (let ((n1 (car to-search)) (n2 (find-useless-adj nodes (car to-search))))
-    (cond
-      ;; no nodes in list
-      ((not n1) nil)
-      ;; to few nodes in list
-      ((< (length to-search) 2) nil)
-      ((and n2 (node-is-useless n1))
-       ;; two useless nodes that are adj
-       (list n1 n2))
-      ;; otherwise, keep looking
-      (t (find-empty-pair-rec nodes (cdr to-search)))
-      ))
-  )
-
 (defun find-empty-pair (nodes)
-  (find-empty-pair-rec nodes
-                       (remove-if (lambda (n) (> 0 (node-rate n)))
-                                  (mapcar #'cdr nodes))))
+  (labels ((find-empty-pair-rec (nodes to-search)
+             (let ((n1 (car to-search)) (n2 (find-useless-adj nodes (car to-search))))
+               (cond
+                 ;; no nodes in list
+                 ((not n1) nil)
+                 ;; to few nodes in list
+                 ((< (length to-search) 2) nil)
+                 ((and n2 (node-is-useless n1))
+                  ;; two useless nodes that are adj
+                  (list n1 n2))
+                 ;; otherwise, keep looking
+                 (t (find-empty-pair-rec nodes (cdr to-search)))
+                 ))))
+    (find-empty-pair-rec nodes
+                         (remove-if (lambda (n) (> 0 (node-rate n)))
+                                    (mapcar #'cdr nodes)))))
+
+(defun nearest-neighbor (nodes cur)
+  (loop for neighbor
+          in (node-tunnels cur)
+        when (assoc neighbor nodes)
+          return neighbor))
+
+(defun dijk-search (nodes source target)
+  (let ((dist (make-hash-table :size (length nodes)))
+        (prev (make-hash-table :size (length nodes)))
+        )
+    ;; initialize to node with very large size (infinity placeholder)
+    ;; initialize prev to nil
+    (loop for n from nodes
+          do (setf (gethash (car n) dist) 40000000)
+             (setf (gethash (car n) prev) nil))
+    (setf (gethash source) 0)
+
+    (labels ((process-nodes (to-process)
+               (let* ((cur (cdar to-process))
+                      (neighbor (nearest-neighbor to-process cur)))
+                 
+                 (loop for n in (node-tunnels cur) )
+                 )))
+      (maplist #'process-nodes nodes))
+
+    ))
 
 (defun collapse-empty-rec (nodes results)
   (cond (nodes
@@ -105,6 +130,6 @@
            
            )
          )
-        (t results))
+        (t results)) 
   )
 
