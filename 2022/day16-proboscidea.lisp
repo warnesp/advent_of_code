@@ -289,7 +289,7 @@
                  ))))
            
            ))
-      "
+      
       (let ((base-travel (all-travel-cost 'aa nodes)) (start '(aa)))
         (loop for p in base-travel
               for time-left = (- 26 1 (caddr p))
@@ -302,8 +302,8 @@
                                                       base-travel)))
                 
               )
-        )"
-      (fmv-rec '(aa) '(aa) 26 26 (list 'aa) nodes (all-travel-cost 'aa nodes))
+        )
+      ;;(fmv-rec '(aa) '(aa) 26 26 (list 'aa) nodes (all-travel-cost 'aa nodes))
       ;;(loop for key being the hash-keys of map do (fresh-line) (princ key) (princ " ") (princ (gethash key map)) maximize (gethash key map))
       
       )))
