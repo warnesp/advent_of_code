@@ -32,7 +32,7 @@
         ((and (zerop left) (= center right)) right)
         (t (+ left center right))))
 
-;; TODO add in corner cases where symbol is at start or end of line
+;; add in corner cases where symbol is at start or end of line
 (defun sum-other-line-parts (line other)
   (fresh-line)
   (princ "===>")
@@ -83,8 +83,51 @@
 ;; Part 2
 ;;;;;;;;;;;
 
+(defstruct gear x y adj-list)
+
+(defun find-gears-x (line y)
+  (loop for c in line
+        for x from 0
+        when (eq #\* (car c))
+          collect (make-gear :x x :y y :adj-list nil)))
+
+(defun find-gears (lines)
+  (remove nil (loop for line in lines
+        for y from 0
+        append (find-gears-x line y)
+        )))
+
+(defun cal-gear-ratio (gear)
+  (if (= (length (gear-adj-list gear)) 2)
+      (apply #'* (gear-adj-list gear))
+      0))
+;; todo skip once adding number
+(defun find-adj-x (line gear)
+  (let ((start-x (max 0 (1- (gear-x gear))))
+        (can-add t))
+    (loop for v in (nthcdr start-x line)
+          for x from start-x to (+ 2 start-x)
+          when (and can-add (> (cdr v) 0))
+            collect (cdr v)
+          when (and can-add (> (cdr v) 0))
+            do (setf can-add nil)
+          when (= 0 (cdr v))
+            do (setf can-add t)
+          )))
+
+(defun find-adj (lines gear)
+  (let ((start-y (max 0 (1- (gear-y gear)))))
+    (loop for line in (nthcdr start-y lines)
+          for y from start-y to (+ 2 start-y)
+          when (>= 1 (abs (- (gear-y gear) y)))
+            append (find-adj-x line gear))))
+
 (defun sum-gears (lines)
-  )
+  (let ((gears (find-gears lines)))
+    (loop for g in gears
+          do (setf (gear-adj-list g)  (find-adj lines g)))
+    (apply #'+ (mapcar #'cal-gear-ratio gears))
+    ))
 
 ;;467835
 (defun day3-test3 ()
@@ -92,6 +135,8 @@
 ;;6756
 (defun day3-test4 ()
   (sum-gears (read-file "inputs/day3-test2" #'read-schematic)))
+
+;;78236071
 (defun day3-real2 ()
   (sum-gears (read-file "inputs/day3" #'read-schematic)))
 
