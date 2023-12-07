@@ -51,12 +51,16 @@
                  (ac-rec (cdr maps) (almanac-map-convert (car maps) currValue))
                  currValue)
              ))
-    (ac-rec (almanac-maps almanac) value))
-  )
+    (ac-rec (almanac-maps almanac) value)))
 
 (defun combine-maps (map1 map2)
   (let ((new-name (concatenate 'string (almanac-map-name map1) (almanac-map-name map2)))
-        (entries nil))
+        (es1 (almanac-map-entries map1))
+        (es2 (almanac-map-entries map2))
+        )
+    (loop for e1 in es1
+          for e2 in es2
+          )
     (make-almanac-map :name new-name
                       :entries entries)))
 
@@ -88,10 +92,20 @@
                       for gap = (- (almanac-entry-source-start next) end-prev)
                       when (> gap 0)
                         collect (make-almanac-entry :dest-start end-prev :source-start end-prev :range gap)
-                      )))
-  
-  
-  )
+                      ))))
+
+(defun find-top-range (maps)
+  (loop for m in maps
+        maximizing
+        (loop for e in (almanac-map-entries m)
+              maximizing (+ (almanac-entry-source-start e) (almanac-entry-range e)) 
+              maximizing (+ (almanac-entry-dest-start e) (almanac-entry-range e)) )
+        ))
+
+(defun add-top (map top-range)
+  (let ((last-entry (car (last (almanac-map-entries map)))))
+    (when (> top-range (+ (almanac-entry-source-start last-entry) (almanac-entry-range last-entry))))
+    ))
 
 (defun fix-map (map)
   (sort-entries map)
@@ -116,6 +130,18 @@
   (dolist (m (almanac-maps *almanac*)) (fix-map m))
   (find-lowest *almanac*))
 
+;; Part 2
+
+
+(defun find-lowest-alt (almanac)
+  (loop for start in (almanac-seeds almanac) by #'cddr
+        for range in (cdr (almanac-seeds almanac)) by #'cddr
+        for end = (+ start range)
+        do (princ "*")
+        minimizing
+        (loop for x from start to end
+              minimizing (almanac-convert almanac x))))
+
 
 ;; 46
 (defun day5-test2 ()
@@ -123,5 +149,15 @@
   (read-file "inputs/day5-test1" #'read-almanac)
   (setf (almanac-maps *almanac*) (reverse (almanac-maps *almanac*)))
   (dolist (m (almanac-maps *almanac*)) (fix-map m))
-  
-  *almanac*)
+  (find-lowest-alt *almanac*)
+  )
+
+;; 4917124
+(defun day5-real2 ()
+  (reset-almanac)
+  (read-file "inputs/day5" #'read-almanac)
+  (setf (almanac-maps *almanac*) (reverse (almanac-maps *almanac*)))
+  (dolist (m (almanac-maps *almanac*)) (fix-map m))
+  (find-lowest-alt *almanac*)
+  )
+
