@@ -17,7 +17,7 @@
 (defparameter *maze-row* -1)
 (defparameter *maze-start* nil)
 
-(defstruct pipe pos in out (is-main nil))
+(defstruct pipe pos in out orig (is-main nil))
 
 (defun char-to-tile (c row col)
   (let ((pos (list row col)))
@@ -25,12 +25,12 @@
       (setf *maze-start* pos))
 
     (case c
-      (#\| (make-pipe :pos pos :in (list (1- row) col) :out (list (1+ row)  col)))
-      (#\- (make-pipe :pos pos :in (list row (1- col)) :out (list row (1+ col))))
-      (#\L (make-pipe :pos pos :in (list (1- row) col) :out (list row (1+ col))) )
-      (#\J (make-pipe :pos pos :in (list (1- row) col) :out (list row (1- col))) )
-      (#\7 (make-pipe :pos pos :in (list row (1- col)) :out (list (1+ row) col)) )
-      (#\F (make-pipe :pos pos :in (list row (1+ col)) :out (list (1+ row) col)) )
+      (#\| (make-pipe :pos pos :in (list (1- row) col) :out (list (1+ row) col) :orig c))
+      (#\- (make-pipe :pos pos :in (list row (1- col)) :out (list row (1+ col)) :orig c))
+      (#\L (make-pipe :pos pos :in (list (1- row) col) :out (list row (1+ col)) :orig c))
+      (#\J (make-pipe :pos pos :in (list (1- row) col) :out (list row (1- col)) :orig c))
+      (#\7 (make-pipe :pos pos :in (list row (1- col)) :out (list (1+ row) col) :orig c))
+      (#\F (make-pipe :pos pos :in (list row (1+ col)) :out (list (1+ row) col) :orig c))
       (#\S 'S )
       (t nil)
       )
@@ -57,8 +57,10 @@
     result))
 
 (defun pipe-to-pos (pipe pos)
-  (or (equal (pipe-in pipe) pos)
-      (equal (pipe-out pipe) pos)))
+  (and pipe 
+       (or (equal (pipe-in pipe) pos)
+           (equal (pipe-out pipe) pos))
+       ))
 
 ;; returns t if pipes connect to one another
 (defun pipes-connect (p1 p2)
@@ -134,7 +136,7 @@
   (if (equal prev-pos (pipe-in cur))
       (aref maze (car (pipe-out cur)) (cadr (pipe-out cur)))
       (aref maze (car (pipe-in cur)) (cadr (pipe-in cur)))
-      ))
+    ))
 
 (defun count-maze-steps (maze prev-pos cur cnt)
   (setf (pipe-is-main cur) t)
@@ -176,12 +178,48 @@
 
 ;; Part 2
 
-;; TODO replace S with correct piece
 (defun clean-maze (maze)
   (loop for i from 0 below (array-total-size maze)
         for p = (row-major-aref maze i)
         when (and p (not (eq 'S p)) (not (pipe-is-main p)))
-          do (setf (row-major-aref maze i) nil)))
+        do (setf (row-major-aref maze i) nil)))
+
+
+;; TODO replace S with correct piece
+(defun fix-s (maze s-loc)
+  (let* ((row (car s-loc)) 
+         (col (cadr s-loc))
+         (max-row (car (array-dimensions maze)))
+         (max-col (cadr (array-dimensions maze)))
+         (is-up (and (> row 0) (pipe-to-pos (aref maze (1- row) col) s-loc)))
+         (is-down (and (< row (1- max-row)) (pipe-to-pos (aref maze (1+ row) col) s-loc)))
+         (is-left (and (> col 0) (pipe-to-pos (aref maze row (1- col)) s-loc)))
+         (is-right (and (< col (1- max-col)) (pipe-to-pos (aref maze row (1+ col)) s-loc)))
+         )
+    (cond
+      ((and is-left is-right) 
+       (setf (aref maze row col)
+             (make-pipe :pos s-loc :in (list (1- row) col) :out (list (1+ row) col) :orig #\-)))
+      ((and is-up is-down) 
+       (setf (aref maze row col)
+             (make-pipe :pos s-loc :in (list row (1- col)) :out (list row (1+ col)) :orig #\|)))
+      ((and is-up is-left) 
+       (setf (aref maze row col)
+             (make-pipe :pos s-loc :in (list row (1- col)) :out (list (1- row) col) :orig #\J)))
+      ((and is-up is-right) 
+       (setf (aref maze row col)
+             (make-pipe :pos s-loc :in (list row (1- col)) :out (list (1+ row) col) :orig #\L)))
+      ((and is-down is-right) 
+       (setf (aref maze row col)
+             (make-pipe :pos s-loc :in (list row (1+ col)) :out (list (1+ row) col) :orig #\F)))
+      ((and is-down is-left) 
+       (setf (aref maze row col)
+             (make-pipe :pos s-loc :in (list row (1+ col)) :out (list (1- row) col) :orig #\7)))
+       
+      )
+    )
+  )
+
 
 ;; todo don't count going in/out for horizontal movement
 (defun count-interior-lr (maze)
@@ -198,11 +236,54 @@
                     do (setf (aref maze i j) 'I)
                     when cur
                     do (setf (aref maze i j) 'P)
-                    
+
                     when (and inside (not cur))
                     sum 1
                     ))
     ))
+
+(defun find-interior (maze)
+  (destructuring-bind (rows columns) (array-dimensions maze)
+    (loop for x from (1- rows) downto 0
+          for inside = nil
+          do (loop for row from x below rows
+                   for col from 0 below columns
+                   for p = (aref maze row col)
+                   when (and p (find (pipe-orig p) '(#\| #\- #\F #\J)))
+                   do (setf inside (not inside))
+                   when (and inside (not p))
+                   do (setf (aref maze row col) #\I)
+                   when (and (not inside) (not p) )
+                   do (setf (aref maze row col) #\O)
+
+                   when p
+                   do (setf (aref maze row col) (pipe-orig p))
+
+                   ))
+    (loop for y from 1 below columns
+          for inside = nil
+          do (loop for row from 0 below rows
+                   for col from y below columns
+                   for p = (aref maze row col)
+
+                   when (and p (find (pipe-orig p) '(#\| #\- #\F #\J)))
+                   do (setf inside (not inside))
+                   when (and inside (not p))
+                   do (setf (aref maze row col) #\I)
+                   when (and (not inside) (not p) )
+                   do (setf (aref maze row col) #\O)
+
+                   when p
+                   do (setf (aref maze row col) (pipe-orig p))
+                   ))
+    )
+  maze)
+
+(defun count-interior (maze)
+  (loop for x from 0 below (array-total-size maze)
+        when (eq (row-major-aref maze x) #\I)
+        sum 1)
+  )
 
 ;; 4
 (defun day10-test3 ()
@@ -213,8 +294,9 @@
     ;; mark what is in maze
     (count-maze-steps maze *maze-start* next 1)
     (clean-maze maze)
-    (count-interior-lr maze)
-    maze
+    (fix-s maze *maze-start*)
+    (find-interior maze)
+    (count-interior maze)
     )
   )
 
@@ -224,12 +306,41 @@
   (let* ((maze (maze-to-array (read-file "inputs/day10-test4" #'read-maze-line)))
          (next (find-maze-start maze *maze-start*))
          )
-    (ceiling (/ (count-maze-steps maze *maze-start* next 1) 2))
+    ;; mark what is in maze
+    (count-maze-steps maze *maze-start* next 1)
+    (clean-maze maze)
+    (fix-s maze *maze-start*)
+    (find-interior maze)
+    (count-interior maze)
     )
   )
 
 ;; 10 
 (defun day10-test5 ()
-
+  (reset-maze)
+  (let* ((maze (maze-to-array (read-file "inputs/day10-test5" #'read-maze-line)))
+         (next (find-maze-start maze *maze-start*))
+         )
+    ;; mark what is in maze
+    (count-maze-steps maze *maze-start* next 1)
+    (clean-maze maze)
+    (fix-s maze *maze-start*)
+    (find-interior maze)
+    (count-interior maze)
+    )
   )
 
+;; 363
+(defun day10-real2 ()
+  (reset-maze)
+  (let* ((maze (maze-to-array (read-file "inputs/day10" #'read-maze-line)))
+         (next (find-maze-start maze *maze-start*))
+         )
+    ;; mark what is in maze
+    (count-maze-steps maze *maze-start* next 1)
+    (clean-maze maze)
+    (fix-s maze *maze-start*)
+    (find-interior maze)
+    (count-interior maze)
+    )
+  )
