@@ -1,8 +1,6 @@
 ;; 2023 Advent of Code Day 5
 
 (load  "utilities.lisp")
-(ql:quickload "cl-ppcre")
-(ql:quickload "str")
 
 (defstruct almanac-entry dest-start source-start range)
 (defstruct almanac-map name entries)

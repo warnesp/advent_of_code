@@ -1,8 +1,6 @@
 ;; 2023 Advent of Code Day 8
 
 (load  "utilities.lisp")
-(ql:quickload "cl-ppcre")
-(ql:quickload "str")
 
 (defstruct node start left right is-end is-start)
 

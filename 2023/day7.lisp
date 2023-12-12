@@ -1,8 +1,6 @@
 ;; 2023 Advent of Code Day 7
 
 (load  "utilities.lisp")
-(ql:quickload "cl-ppcre")
-(ql:quickload "str")
 
 (defstruct hand cards bid)
 

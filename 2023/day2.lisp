@@ -2,7 +2,6 @@
 
 (load  "utilities.lisp")
 
-(ql:quickload "cl-ppcre")
 
 (defparameter *max-red* 12)
 (defparameter *max-green* 13)

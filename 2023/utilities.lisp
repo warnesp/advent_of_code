@@ -1,4 +1,8 @@
 
+(ql:quickload "cl-ppcre")
+(ql:quickload "str")
+
+
 (defun read-file (file-name process-line)
   (with-open-file (in file-name :if-does-not-exist nil) 
     (when in

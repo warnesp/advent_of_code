@@ -1,7 +1,6 @@
 ;; 2023 Advent of Code Day 4
 
 (load  "utilities.lisp")
-(ql:quickload "cl-ppcre")
 
 (defun create-card (num winning have)
   (list num winning have))
