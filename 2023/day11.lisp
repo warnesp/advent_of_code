@@ -59,14 +59,6 @@
         collect i))
 
 (defun count-empty-crosses (pos1 pos2 empties)
-  (princ (loop for empty in empties
-        when (or 
-               (and (< pos2 empty)
-                  (< empty pos1))
-               (and (< pos1 empty)
-                  (< empty pos2)))
-        sum 1
-        ))
   (loop for empty in empties
         when (or 
                (and (< pos2 empty)
@@ -77,12 +69,12 @@
         ))
 
 (defun mod-manhat-dist (pt1 pt2 expansion empty-rows empty-cols)
-  (+ (manhat-dist pt1 pt2) 
-     (* expansion 
-        (+ (count-empty-crosses (car pt1) (car pt2) empty-rows)
+  (let ((crosses (+ (count-empty-crosses (car pt1) (car pt2) empty-rows)
            (count-empty-crosses (cadr pt1) (cadr pt2) empty-cols)
-          )
-        )))
+          )))
+    (+ (manhat-dist pt1 pt2) (* (1- expansion) crosses))
+    )
+  )
 
 (defun manhat-dist-sum2 (lst expansion empty-rows empty-cols)
   (let ((pt1 (car lst)))
@@ -106,5 +98,10 @@
 ;; 8410 = 100 times
 (defun day11-test2 (expansion)
   (let ((star-map (read-file "inputs/day11-test1" #'read-star-image)))
+    (manhat-dist-map2 star-map expansion)))
+
+;; 857986849428
+(defun day11-real2 (expansion)
+  (let ((star-map (read-file "inputs/day11" #'read-star-image)))
     (manhat-dist-map2 star-map expansion)))
 
