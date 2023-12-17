@@ -1,6 +1,21 @@
 
+(defpackage :aoc-utils
+  (:use cl)
+  (:export #:read-file
+           #:transpose
+           #:manhat-dist
+           #:manhat-dist2
+           #:list-to-2d-array))
+
+(in-package :aoc-utils)
+
 (ql:quickload "cl-ppcre")
 (ql:quickload "str")
+
+(defun list-to-2d-array (lst)
+  (let ((rows (length lst))
+        (cols (length (car lst))))
+    (make-array (list rows cols) :initial-contents lst)))
 
 
 (defun read-file (file-name process-line)
@@ -11,6 +26,8 @@
             collect (funcall process-line line)))))
 
 
+(defun transpose (lst)
+  (apply #'mapcar #'list lst))
 
 (defun manhat-dist (p1 p2)
   (+ (abs (- (car p1) (car p2)))

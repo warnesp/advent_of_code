@@ -56,7 +56,6 @@
 (defun count-arrangements-dp (report pos groups tbl)
   (let ((group (car groups))
         (report-len (length report)))
-    
     (let* ((pr (gethash (list pos groups) tbl)))
       (cond 
               (pr (progn (princ pr) (princ " ") pr))
@@ -81,7 +80,7 @@
                                 )  
                       sum (if (gethash key tbl)
                               (gethash key tbl)
-                              (let ((r2 (count-arrangements report (+ x group 1) (cdr groups) )))
+                              (let ((r2 (count-arrangements-dp report (+ x group 1) (cdr groups) tbl)))
                                   (setf (gethash key tbl) r2)
                                   r2
                                   )
@@ -157,6 +156,7 @@
   (let ((records (read-file "inputs/day12-test1" #'read-condition-record)))
     (sum-arrangements (mapcar #'unfold-record records))))
 
+;; 60681419004564
 (defun day12-real2 ()
   (let ((records (read-file "inputs/day12" #'read-condition-record)))
     (sum-arrangements (mapcar #'unfold-record records))))

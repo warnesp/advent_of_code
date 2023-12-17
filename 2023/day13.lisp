@@ -51,6 +51,18 @@
     finally (return-from searcher t)
     ))
 
+
+(defun find-smudge-reflection-p (line p dist)
+  (loop named searcher 
+    for left from (1- p) downto 0
+    for right from p
+    for cnt from 1 upto dist
+    sum (logcount (logxor (aref line left) (aref line right))) into diff
+    when (> diff 1)
+    do (return-from searcher nil)
+    finally (return-from searcher t)
+    ))
+
 (defun find-reflection (line)
   (loop with len = (array-total-size line)
         for p from 1 below len
@@ -59,18 +71,25 @@
         return p
         finally (return 0)))
 
+(defun find-smudge-reflection (line)
+  (let ((orig (find-reflection line)))
+    (loop with len = (array-total-size line)
+          for p from 1 below len
+          for dist = (min p (- len p))
+          when (and (not (= p orig)) 
+                    (find-smudge-reflection-p line p dist)) 
+          return p
+          finally (return 0))
+    ))
+
 (defun col-reflections (maps conv-f)
   (loop for m in maps
         collect (find-reflection (funcall conv-f m))))
 
-(defun sum-vertical-reflections (maps)
+(defun sum-reflections2 (maps find-f conv-f)
   (loop for m in maps
-        sum (find-reflection (map-to-verticals m)))
+        sum (funcall find-f (funcall conv-f m)))
   )
-
-(defun sum-horizontal-reflections (maps)
-  (loop for m in maps
-        sum (find-reflection (map-to-horizontals m))))
 
 (defun print-reflections (maps)
   (fresh-line)
@@ -82,9 +101,8 @@
   (princ (col-reflections maps #'map-to-horizontals)))
 
 (defun sum-reflections (maps)
-  (+ (sum-vertical-reflections maps)
-     (* 100 (sum-horizontal-reflections maps)))
-  )
+  (+ (sum-reflections2 maps #'find-reflection #'map-to-verticals)
+     (* 100 (sum-reflections2 maps #'find-reflection #'map-to-horizontals))))
 
 ;; Part 1
 
@@ -102,10 +120,19 @@
 
 ;; Part 2
 
+(defun sum-smudge-reflections (maps)
+  (+ (sum-reflections2 maps #'find-smudge-reflection #'map-to-verticals)
+     (* 100 (sum-reflections2 maps #'find-smudge-reflection #'map-to-horizontals))))
+
 ;; change one position, find new reflection
 ;; xor numbers, count bits (logcount (logxor )
 ;; if total bits <= 1, good to go
 ;; also, skip old mirror
 
 ;; 400
+(defun day13-test3 ()
+  (sum-smudge-reflections (build-map (read-file "inputs/day13-test1" #'read-map))))
 
+;; 36919
+(defun day13-real2 ()
+  (sum-smudge-reflections (build-map (read-file "inputs/day13" #'read-map))))
