@@ -1,3 +1,5 @@
+(in-package :aoc-utils)
+
 
 (defun list-to-2d-array (lst)
   "converts the given list into a 2d array"

@@ -2,17 +2,19 @@
 
 ;; Define your project functionality here...
 
-(defun greet (&optional (name "Paul Warnes"))
-  (format t "Hello ~a from ~a!~&" name "advt2024"))
-
 (defun help ()
   (format t "~&Usage:
 
-  advt2024 [day]~&"))
+  advt2024 day [-t] [-p2]~&"))
 
 (defun invalid-day (day)
 (format t "Invalid day: ~a~&" day)
+  (help)
     (uiop:quit))
+
+(defun build-fn (day part test)
+  "builds the day function to call, can call part 1 or 2 and regular or test"
+  (concatenate 'string "(advt2024-d" day ":run-" part (if test "-test" "") ")"))
 
 (defun %main (argv)
   "Parse CLI args."
@@ -21,10 +23,17 @@
     ;; clingon, unix-opts, defmain, adopt… when needed.
     (help)
     (uiop:quit))
-  (let ((day (parse-integer (first argv) :junk-allowed t)))
-    (case day
-      (1 (day01))
-      (t (invalid-day day)))
+  (let ((day-i (or (parse-integer (first argv) :junk-allowed t) 0) )
+        (day (first argv))
+        (test (member "-t" argv :test #'equal))
+        (part (if (member "-p2" argv :test #'equal) "p2" "p1") )
+        )
+    (format t "~a~&" (build-fn day part test))
+    (if (and (>= day-i 1) (<= day-i 25)) 
+        (eval (read-from-string (build-fn day part test)))
+        (invalid-day day))
+     (uiop:quit)
+    
     )
   )
 
