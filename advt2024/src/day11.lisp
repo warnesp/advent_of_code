@@ -7,10 +7,10 @@
   (format t "Hello from ~a!~&" "day11"))
 
 (defun run-p1-test ()
-  (format t "Hello from ~a!~&" "day11"))
+  (format t "Hello from ~a!~&" "day11 test"))
 
 (defun run-p2 ()
-  (format t "Hello from ~a!~&" "day11"))
+  (format t "Hello from ~a!~&" "day11 part2"))
 
 (defun run-p2-test ()
-  (format t "Hello from ~a!~&" "day11"))
+  (format t "Hello from ~a!~&" "day11 part2 test"))
