@@ -14,7 +14,7 @@
 
 (defun build-fn (day part test)
   "builds the day function to call, can call part 1 or 2 and regular or test"
-  (concatenate 'string "(advt2024-d" day ":run-" part (if test "-test" "") ")"))
+  (concatenate 'string "(advt2024-d" day ":run-" part (if test "-test" "-real") ")"))
 
 (defun %main (argv)
   "Parse CLI args."
@@ -30,7 +30,7 @@
         )
     (format t "~a~&" (build-fn day part test))
     (if (and (>= day-i 1) (<= day-i 25)) 
-        (eval (read-from-string (build-fn day part test)))
+        (format t "~a~&" (eval (read-from-string (build-fn day part test)))) 
         (invalid-day day))
      (uiop:quit)
     

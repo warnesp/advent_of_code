@@ -10,11 +10,12 @@
 
 (defun read-file (file-name process-line)
   "processes the given file line by line with the function process-line"
-  (with-open-file (in file-name :if-does-not-exist nil) 
-    (when in
+  (with-open-file (in (concatenate 'string (sb-posix:getcwd) "/" file-name) :if-does-not-exist nil) 
+    (if in
       (loop for line = (read-line in nil)
             while line
-            collect (funcall process-line line)))))
+            collect (funcall process-line line))
+      "not found")))
 
 
 (defun transpose (lst)
