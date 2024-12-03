@@ -22,6 +22,10 @@
   "transposes the given list"
   (apply #'mapcar #'list lst))
 
+(defun flatten (lst)
+  "flattens a list of list"
+  (apply #'concatenate 'list lst))
+
 (defun manhat-dist (p1 p2)
   "calculate the manhaten distance between the points p1 and p2"
   (+ (abs (- (car p1) (car p2)))
