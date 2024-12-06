@@ -1,5 +1,8 @@
 (in-package :aoc-utils)
 
+(defun to-symbols (str)
+  "converts a string to a list of symbols"
+  (loop for x across str collect (intern (string x))))
 
 (defun list-to-2d-array (lst)
   "converts the given list into a 2d array"

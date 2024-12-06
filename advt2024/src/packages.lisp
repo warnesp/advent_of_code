@@ -5,6 +5,7 @@
    :flatten
    :list-to-2d-array
    :read-file
+   :to-symbols
    :transpose
    :manhat-dist
    :manhat-dist-2))

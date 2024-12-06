@@ -11,11 +11,10 @@
 
 (defun convert-direction (g)
   (case g
-    (^ 'up)
-    (> 'right)
-    (< 'left)
-    (v 'down)
-    ))
+    (^ 'UP)
+    (> 'RIGHT)
+    (< 'LEFT)
+    (v 'DOWN)))
 
 
 (defun find-guard (map)
@@ -24,15 +23,14 @@
           do (loop for i from 0 below cols
                    for v = (aref  map j i)
                    when (not (or (eql '|.| v) (eql '|#| v)))
-                     do (return-from find-guard (make-guard :direction (convert-direction v) :x i :y j )))
-  )))
+                     do (return-from find-guard (make-guard :direction (convert-direction v) :x i :y j ))))))
 
 (defun turn-guard (guard)
   (case (guard-direction guard)
-      (UP (setf (guard-direction guard) 'RIGHT))
-      (DOWN (setf (guard-direction guard) 'LEFT))
-      (LEFT (setf (guard-direction guard) 'UP))
-      (RIGHT (setf (guard-direction guard) 'DOWN))))
+    (UP (setf (guard-direction guard) 'RIGHT))
+    (DOWN (setf (guard-direction guard) 'LEFT))
+    (LEFT (setf (guard-direction guard) 'UP))
+    (RIGHT (setf (guard-direction guard) 'DOWN))))
 
 (defun on-map (map x y)
   (destructuring-bind (rows cols) (array-dimensions map)
@@ -44,33 +42,49 @@
 
 (defun next-pos (guard)
   (case (guard-direction guard)
-    (UP (list (guard-x guard) (1- (guard-y guard))))
-    (DOWN (list (guard-x guard) (1+ (guard-y guard))))
-    (LEFT (list (1- (guard-x guard)) (guard-y guard)))
-    (RIGHT (list (1+ (guard-x guard)) (guard-y guard)))
-    ))
+    (UP (decf (guard-y guard)))
+    (DOWN   (incf (guard-y guard)))
+    (LEFT (decf (guard-x guard)) )
+    (RIGHT (incf (guard-x guard)))))
+
+(defun prev-pos (guard)
+  "moves the guard backwards and turns"
+  (case (guard-direction guard)
+    (UP (incf (guard-y guard)))
+    (DOWN   (decf (guard-y guard)))
+    (LEFT (incf (guard-x guard)) )
+    (RIGHT (decf (guard-x guard))))
+  guard)
 
 (defun move-guard (map guard)
-  (destructuring-bind (x y) (next-pos guard)
+  (next-pos guard)
+  (let ((x (guard-x guard))
+        (y (guard-y guard)))
     (if (on-map map x y)
+        ; check if we are on top of a barrier, and if so go back and turn instead
         (if (eql '|#| (aref map y x))
-            (turn-guard guard)
-            (progn (setf (guard-x guard) x)
-                   (setf (guard-y guard) y))) 
-        (setf (guard-direction guard) nil)
-    )))
+            (turn-guard (prev-pos guard))
+            t)
+        ; ran off the map
+        (setf (guard-direction guard) nil))))
+
+(defun solve (map guard)
+  (mark-guard map guard)
+  (loop while (guard-direction guard)
+        do (mark-guard map guard)
+        do (move-guard map guard)))
 
 (defun run-p1 (file) 
   (let* ((map (list-to-2d-array (read-file file #'to-symbols)))
          (guard (find-guard map)))
-    (mark-guard map guard)
-    (loop while (guard-direction guard)
-          do (mark-guard map guard)
-          do (move-guard map guard)
-          )
+    ;; solve the puzzel
+    (solve map guard)
     
-  (destructuring-bind (rows cols) (array-dimensions map)
-    (loop for y from 0 below rows sum (loop for x from 0 below cols count (eql (aref map y x) 'X))))))
+    ;; count the spaces
+    (destructuring-bind (rows cols) (array-dimensions map)
+      (loop for y from 0 below rows
+            sum (loop for x from 0 below cols
+                      count (eq (aref map y x) 'X))))))
 
 (defun save-move (guard move)
   (setf (gethash move (guard-moves guard)) t))
@@ -78,37 +92,40 @@
 (defun reset-moves (guard)
   (setf (guard-moves guard) nil))
 
+(defun guard-to-move (guard)
+  (make-move :x (guard-x guard) :y (guard-y guard) :direction (guard-direction guard)))
+
 (defun is-loop (x y map original-guard)
-  ;; can only set new blocks in blank spaces
-  (unless (eql '|.| (aref map y x)) (return-from is-loop nil))
+  ;; can only set new blocks in spaces where the guard originaly goes, ignoring initial position
+  (unless (or (eql 'X (aref map y x)) (and (= x (guard-x original-guard)) (= y (guard-y original-guard)))) (return-from is-loop nil))
   (let ((guard (copy-guard original-guard)))
     ;; save the initial guard position
-    (save-move guard (make-move :x (guard-x guard) :y (guard-y guard) :direction (guard-direction guard)))
+    (save-move guard (guard-to-move guard))
     ;; set the "new" block
     (setf (aref map y x) '|#|)
     ;; loop and check for guard loops
     (let ((result
             (loop
               while (move-guard map guard)
-              for move = (make-move :x (guard-x guard) :y (guard-y guard) :direction (guard-direction guard))
+              for move = (guard-to-move guard) 
               ;; if we have seen the move before, then it is a loop
               if (gethash move (guard-moves guard))
                 return t
               else
-                do (save-move guard move)
-              finally
-                 (return nil))))
+                do (save-move guard move))))
 
       ;; reset initial position
       (setf (aref map y x) '|.|)
+      ;; clear saved positions
       (clrhash (guard-moves guard))
       result)))
 
 
 (defun run-p2 (file) 
   (let* ((map (list-to-2d-array (read-file file #'to-symbols)))
-         (guard (find-guard map)))
-    
+         (guard (find-guard map))
+         (guard2 (copy-guard guard)))
+    (solve map guard2)
     (destructuring-bind (rows cols) (array-dimensions map)
       (loop for y from 0 below rows
             sum (loop for x from 0 below cols

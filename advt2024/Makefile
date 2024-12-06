@@ -1,6 +1,6 @@
 LISP ?= sbcl
 
-all: test
+all: build
 
 run:
 	rlwrap $(LISP) --load run.lisp
@@ -11,6 +11,3 @@ build:
 		--eval '(ql:quickload :advt2024)' \
 		--eval '(asdf:make :advt2024)'
 
-test:
-	$(LISP) --non-interactive \
-		--load run-tests.lisp
