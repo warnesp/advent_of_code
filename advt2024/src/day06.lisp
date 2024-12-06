@@ -91,9 +91,11 @@
             (loop
               while (move-guard map guard)
               for move = (make-move :x (guard-x guard) :y (guard-y guard) :direction (guard-direction guard))
-              when (gethash move (guard-moves guard))
+              ;; if we have seen the move before, then it is a loop
+              if (gethash move (guard-moves guard))
                 return t
-              do (save-move guard move)
+              else
+                do (save-move guard move)
               finally
                  (return nil))))
 
