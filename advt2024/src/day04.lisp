@@ -7,7 +7,7 @@
 
 
 (defun p1-process-line (line)
-  (to-symbols line))
+  (to-symbols line 'advt2024-d4))
 
 (defun found-word-h (word data i j)
   "checks for a word existing from the point horizontally to the right"

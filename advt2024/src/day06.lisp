@@ -75,9 +75,10 @@
         do (move-guard map guard)))
 
 (defun run-p1 (file) 
-  (let* ((map (list-to-2d-array (read-file file #'to-symbols)))
+  (let* ((map (list-to-2d-array (read-file file (lambda (s) (to-symbols s 'advt2024-d6)))))
          (guard (find-guard map)))
     ;; solve the puzzel
+
     (solve map guard)
     
     ;; count the spaces
@@ -115,14 +116,14 @@
                 do (save-move guard move))))
 
       ;; reset initial position
-      (setf (aref map y x) '|.|)
+      (setf (aref map y x) 'X)
       ;; clear saved positions
       (clrhash (guard-moves guard))
       result)))
 
 
 (defun run-p2 (file) 
-  (let* ((map (list-to-2d-array (read-file file #'to-symbols)))
+  (let* ((map (list-to-2d-array (read-file file (lambda (s) (to-symbols s 'advt2024-d6)))))
          (guard (find-guard map))
          (guard2 (copy-guard guard)))
     (solve map guard2)
