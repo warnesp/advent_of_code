@@ -26,11 +26,12 @@
                      do (return-from find-guard (make-guard :direction (convert-direction v) :x i :y j ))))))
 
 (defun turn-guard (guard)
-  (case (guard-direction guard)
-    (UP (setf (guard-direction guard) 'RIGHT))
-    (DOWN (setf (guard-direction guard) 'LEFT))
-    (LEFT (setf (guard-direction guard) 'UP))
-    (RIGHT (setf (guard-direction guard) 'DOWN))))
+  (setf (guard-direction guard)
+        (case (guard-direction guard)
+          (UP    'RIGHT)
+          (DOWN  'LEFT)
+          (LEFT  'UP)
+          (RIGHT 'DOWN))))
 
 (defun on-map (map x y)
   (destructuring-bind (rows cols) (array-dimensions map)
@@ -42,17 +43,17 @@
 
 (defun next-pos (guard)
   (case (guard-direction guard)
-    (UP (decf (guard-y guard)))
-    (DOWN   (incf (guard-y guard)))
-    (LEFT (decf (guard-x guard)) )
+    (UP    (decf (guard-y guard)))
+    (DOWN  (incf (guard-y guard)))
+    (LEFT  (decf (guard-x guard)) )
     (RIGHT (incf (guard-x guard)))))
 
 (defun prev-pos (guard)
   "moves the guard backwards and turns"
   (case (guard-direction guard)
-    (UP (incf (guard-y guard)))
-    (DOWN   (decf (guard-y guard)))
-    (LEFT (incf (guard-x guard)) )
+    (UP    (incf (guard-y guard)))
+    (DOWN  (decf (guard-y guard)))
+    (LEFT  (incf (guard-x guard)) )
     (RIGHT (decf (guard-x guard))))
   guard)
 
@@ -61,11 +62,11 @@
   (let ((x (guard-x guard))
         (y (guard-y guard)))
     (if (on-map map x y)
-        ; check if we are on top of a barrier, and if so go back and turn instead
+                                        ; check if we are on top of a barrier, and if so go back and turn instead
         (if (eql '|#| (aref map y x))
             (turn-guard (prev-pos guard))
             t)
-        ; ran off the map
+                                        ; ran off the map
         (setf (guard-direction guard) nil))))
 
 (defun solve (map guard)
@@ -78,7 +79,6 @@
   (let* ((map (list-to-2d-array (read-file file (lambda (s) (to-symbols s 'advt2024-d6)))))
          (guard (find-guard map)))
     ;; solve the puzzel
-
     (solve map guard)
     
     ;; count the spaces
@@ -130,8 +130,7 @@
     (destructuring-bind (rows cols) (array-dimensions map)
       (loop for y from 0 below rows
             sum (loop for x from 0 below cols
-                      count (is-loop x y map guard)))
-      )))
+                      count (is-loop x y map guard))))))
 
 (defun run-p1-real ()
   "5080"

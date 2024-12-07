@@ -4,6 +4,7 @@
   (:export 
    :flatten
    :list-to-2d-array
+   :print-package
    :read-file
    :to-symbols
    :transpose

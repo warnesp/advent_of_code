@@ -3,6 +3,8 @@
 (defun to-symbols (str pkg)
   "converts a string to a list of symbols"
   (loop for x across str collect (intern (string x) pkg)))
+(defun print-package ()
+  (format t "~a~&" *package*))
 
 (defun list-to-2d-array (lst)
   "converts the given list into a 2d array"
