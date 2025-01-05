@@ -12,6 +12,9 @@
         (cols (length (car lst))))
     (make-array (list rows cols) :initial-contents lst)))
 
+(defun in-map (map x y)
+  (destructuring-bind (rows cols) (array-dimensions map)
+     (and (>= x 0) (>= y 0) (< x cols) (< y rows))))
 
 (defun read-file (file-name process-line)
   "processes the given file line by line with the function process-line"

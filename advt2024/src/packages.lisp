@@ -3,6 +3,7 @@
   (:use :cl)
   (:export 
    :flatten
+   :in-map
    :list-to-2d-array
    :print-package
    :read-file

@@ -12,7 +12,6 @@
 (defun p1-process-rules (line)
   (mapcar #'parse-integer (uiop:split-string line :separator "|")))
 
-
 (defun p1-process-pages (line)
   (mapcar #'parse-integer (uiop:split-string line :separator ",")))
 
